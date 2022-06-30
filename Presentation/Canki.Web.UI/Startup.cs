@@ -1,4 +1,5 @@
 using AutoMapper;
+using Canki.Web.UI.APIs;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -6,9 +7,13 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Newtonsoft.Json.Serialization;
+using Polly;
+using Refit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Canki.Web.UI
@@ -37,7 +42,15 @@ namespace Canki.Web.UI
             services.AddAutoMapper(typeof(Startup));
 
             services.AddControllersWithViews()
-                .AddRazorRuntimeCompilation();
+                .AddRazorRuntimeCompilation()
+                .AddNewtonsoftJson(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new DefaultContractResolver();
+                    options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+                });
+
+            RegisterClient(services);
+
 
             services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
                 .AddCookie(options=> 
@@ -45,7 +58,6 @@ namespace Canki.Web.UI
                     options.LoginPath = "/Account/Login";
                 });
         }
-
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
@@ -71,6 +83,17 @@ namespace Canki.Web.UI
 
                 endpoints.MapDefaultControllerRoute();
             });
+        }
+
+        private void RegisterClient(IServiceCollection services)
+        {
+            var baseUrl = Configuration.GetSection("Settings").GetSection("Host")["CoreAPIServer"];
+            var baseUri = new Uri(baseUrl);
+
+            services.AddRefitClient<ICategoryApi>()
+                .ConfigureHttpClient(client => { client.BaseAddress = baseUri; })
+                .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(TimeSpan.FromSeconds(30)))
+                .AddTransientHttpErrorPolicy(p => p.RetryAsync(3));
         }
     }
 }

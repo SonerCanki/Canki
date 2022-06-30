@@ -17,7 +17,7 @@ namespace Canki.Model.Maps
 
                 entity.Property(x => x.Name).HasMaxLength(50).IsRequired(true);
                 entity.Property(x => x.Description).HasMaxLength(50).IsRequired(true);
-                entity.Property(x => x.ImageFile).HasMaxLength(50).IsRequired(true);
+                entity.Property(x => x.ImageFile).HasMaxLength(50).IsRequired(false);
             });
         }
     }

@@ -3,12 +3,10 @@ using Canki.Common.DTOs.Category;
 using Canki.Common.Models;
 using Canki.Model.Entities;
 using Canki.Service.Repository.Category;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 namespace Canki.Api.Controllers
@@ -20,7 +18,7 @@ namespace Canki.Api.Controllers
         ICategoryRepository _categoryRepository;
         IMapper _mapper;
 
-        public CategoryController(ICategoryRepository categoryRepository,IMapper mapper)
+        public CategoryController(ICategoryRepository categoryRepository, IMapper mapper)
         {
             _categoryRepository = categoryRepository;
             _mapper = mapper;
@@ -30,7 +28,7 @@ namespace Canki.Api.Controllers
         [HttpGet]
         public async Task<ActionResult<WebApiResponse<List<CategoryResponse>>>> GetCategories()
         {
-            var categoryResult= _mapper.Map<List<CategoryResponse>>(await _categoryRepository.TableNoTracking.ToListAsync());
+            var categoryResult = _mapper.Map<List<CategoryResponse>>(await _categoryRepository.TableNoTracking.ToListAsync());
 
             if (categoryResult.Count > 0)
                 return new WebApiResponse<List<CategoryResponse>>(true, "Succes", categoryResult);
@@ -41,7 +39,7 @@ namespace Canki.Api.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<WebApiResponse<CategoryResponse>>> GetCategory(Guid id)
         {
-             var category=await _categoryRepository.GetById(id);
+            var category = await _categoryRepository.GetById(id);
             if (category != null)
                 new WebApiResponse<CategoryResponse>(true, "Succes", _mapper.Map<CategoryResponse>(category));
 
@@ -52,11 +50,11 @@ namespace Canki.Api.Controllers
 
         public async Task<ActionResult<WebApiResponse<CategoryResponse>>> PostCategory(CategoryRequest request)
         {
-            var category =  _mapper.Map<Category>(request);
+            var category = _mapper.Map<Category>(request);
             var categoryInsert = await _categoryRepository.Add(category);
-            if (categoryInsert!=null)
+            if (categoryInsert != null)
             {
-                new WebApiResponse<CategoryResponse>(true, "Succes", _mapper.Map<CategoryResponse>(categoryInsert));
+                return new WebApiResponse<CategoryResponse>(true, "Succes", _mapper.Map<CategoryResponse>(categoryInsert));
             }
             return new WebApiResponse<CategoryResponse>(false, "Error");
         }
